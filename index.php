@@ -7,7 +7,7 @@
      </head>
      <body>
 	 <div>
-	     <object id="itheora3-fork" type="application/xhtml+xml" data="itheora.php?v=oceans-clip" style="width: 640px; height: 264px;">
+	     <object id="oceans-clip" name="oceans-clip" type="application/xhtml+xml" data="itheora.php?v=oceans-clip" style="width: 640px; height: 264px;">
 	     </object>
 	 </div>
      </body>
