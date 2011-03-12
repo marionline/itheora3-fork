@@ -1,5 +1,9 @@
 <?php
 /**
+ * The url the video 
+ */
+$url = "http://localhost/~mario/itheora3-fork/video";
+/**
  *  Add poster imate to VideoJS?
  */
 $poster_image = true;
