@@ -63,15 +63,24 @@ class itheora {
      * getFiles 
      * 
      * @access protected
-     * @return void
+     * @return void | false
      */
     protected function getFiles() {
 	// Get the files, video and picture to use
-	if ($handle = opendir($this->video()) ) {
-	    while (false !== ($file = readdir($handle))) {
-		$this->_files[pathinfo($file, PATHINFO_EXTENSION)] = $file;
+	if(is_dir($this->video())){
+	    if ($handle = opendir($this->video()) ) {
+		while (false !== ($file = readdir($handle))) {
+		    $this->_files[pathinfo($file, PATHINFO_EXTENSION)] = $file;
+		}
+		closedir($handle);
 	    }
-	    closedir($handle);
+	} else {
+	    if($this->_videoName != 'error'){
+		$this->setVideoName('error');
+		$this->getFiles();
+	    } else {
+		return false;
+	    }
 	}
     }
 
@@ -151,6 +160,26 @@ class itheora {
 	    foreach( $filetypes as $filetype ) {
 		if(isset($this->_files[$filetype]))
 		    return $this->completeUrl($this->_files[$filetype]);
+	    }
+	}
+
+	// If no pictures are found return false
+	return false;
+    }
+
+    /**
+     * getPosterSize 
+     * return the getimagesize array, need GD Library
+     * 
+     * @param array $filetypes default value ('png', 'jpg', 'gif')  
+     * @access public
+     * @return array
+     */
+    public function getPosterSize( $filetypes = array('png', 'jpg', 'gif') ) {
+	if(is_array($filetypes)){
+	    foreach( $filetypes as $filetype ) {
+		if(isset($this->_files[$filetype]))
+		    return getimagesize($this->_videoStoreDir . '/' . $this->_videoName .  '/' .$this->_files[$filetype]);
 	    }
 	}
 
