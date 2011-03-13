@@ -6,6 +6,13 @@ include_once('lib/functions.php');
     <head>
         <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 
+	<style type="text/css">
+	    .itheora3-fork {
+		padding: 5px;
+		background-color: #EAD9BC;
+	    }
+	</style>
+
         <title>ITheora, I really broadcast myself - New Itheora fork test</title>
     </head>
     <body>
@@ -15,41 +22,46 @@ include_once('lib/functions.php');
 	    I don't pass any parameters so the output use default video with the width and heigth take from poster image:
 	    <br />
 	    <code><?php highlight_string('<?php echo createObjectTag(); ?>'); ?></code>
+	    <br />
+	    <?php echo createObjectTag(); ?>
 	</p>
-	<?php echo createObjectTag(); ?>
 	<p>
 	    I can use directly html code and set width and height as I want:
 	    <br />
 	    <code>
-		<?php highlight_string('<object id="example" name="example" type="application/xhtml+xml" data="itheora.php?w=640&h=264" style="width: 640px; height: 264px;">
+		<?php highlight_string('<object id="example" name="example" class="itheora3-fork" type="application/xhtml+xml" data="itheora.php?w=640&amp;h=264" style="width: 640px; height: 264px;">
 		</object>'); ?>
 	    </code>
+	    <br />
+	    <object id="example" name="example" class="itheora3-fork" type="application/xhtml+xml" data="itheora.php?w=640&amp;h=264" style="width: 640px; height: 264px;">
+	    </object>
 	</p>
-	<object id="example" name="example" type="application/xhtml+xml" data="itheora.php?w=640&h=264" style="width: 640px; height: 264px;">
-	</object>
 	<p>
 	    Or use createObjectTag() function helper and set my preferer width and heigth:
 	    <br />
 	    <code>
 		<?php highlight_string('<?php echo createObjectTag(\'example\', 300, 400); ?>'); ?>
 	    </code>
+	    <br />
+	    <?php echo createObjectTag('example', 300, 400); ?>
 	</p>
-	<?php echo createObjectTag('example', 300, 400); ?>
 	<p>
 	    Or just use createObjectTag() function with just video name, the function retrive alone the width and height to use.
 	    <br />
 	    <code>
 		<?php highlight_string('<?php echo createObjectTag(\'oceans-clip\'); ?>'); ?>
 	    </code>
+	    <br />
+	    <?php echo createObjectTag('oceans-clip'); ?>
 	</p>
-	<?php echo createObjectTag('oceans-clip'); ?>
 	<p>
 	    If no file are found we have the error video:
 	    <br />
 	    <code>
 		<?php highlight_string('<?php echo createObjectTag(\'ocean-clip-not-exist\'); ?>'); ?>
 	    </code>
+	    <br />
+	    <?php echo createObjectTag('ocean-clip-not-exist'); ?>
 	</p>
-	<?php echo createObjectTag('ocean-clip-not-exist'); ?>
     </body>
 </html>
