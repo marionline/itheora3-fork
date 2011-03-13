@@ -1,5 +1,6 @@
 <?php
-require_once('lib/ogg.class.php');
+//require_once('lib/ogg.class.php');
+require_once('lib/functions.php');
 /**
  * itheora 
  * 
@@ -27,9 +28,10 @@ class itheora {
 	// Local cache directory
 	$this->_cacheDir = dirname(__FILE__) . '/../cache';
 	// The name of the server host
-	$this->_baseUrl = strtolower(substr($_SERVER['SERVER_PROTOCOL'], 0, 5)) == 'https://' ? 'https://' : 'http://' 
-	    . $_SERVER['HTTP_HOST']
-	    . pathinfo($_SERVER['PHP_SELF'], PATHINFO_DIRNAME);
+	//$this->_baseUrl = strtolower(substr($_SERVER['SERVER_PROTOCOL'], 0, 5)) == 'https://' ? 'https://' : 'http://' 
+	    //. $_SERVER['HTTP_HOST']
+	    //. pathinfo($_SERVER['PHP_SELF'], PATHINFO_DIRNAME);
+	$this->_baseUrl = getBaseUrl();
 
 	// Check if cache directory exist and is writable, if not writable change chmod
 	if(is_dir($this->_cacheDir) && !is_writable($this->_cacheDir))
