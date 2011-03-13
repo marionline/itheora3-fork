@@ -4,15 +4,17 @@ include_once('config/config.inc.php');
 require_once('lib/itheora.class.php');
 
 // Get parameters from $_GET array
-$width  = isset($_GET['w']) ? ((int)$_GET['w'] - 10) : '100%';
-$width  = (substr($width, -1) == '%') ? $width : $width.'px';
-
-$height = isset($_GET['h']) ? ((int)$_GET['h'] - 20) : '100%';
-$height = (substr($height, -1) == '%') ? $height : $height.'px';
-
 $video  = isset($_GET['v']) ? $_GET['v'] : 'example';
 $itheora = new itheora();
 $itheora->setVideoName($video);
+$posterSize = $itheora->getPosterSize();
+
+$width  = isset($_GET['w']) ? ((int)$_GET['w']) : $posterSize[0];
+$width  = $width.'px';
+
+$height = isset($_GET['h']) ? ((int)$_GET['h']) : $posterSize[1];
+$height = $height.'px';
+
 ?>
 <!DOCTYPE html>
 <html>
@@ -39,11 +41,10 @@ $itheora->setVideoName($video);
       </style>
 </head>
 <body>
-
       <!-- Begin VideoJS -->
       <div class="video-js-box">
 	<!-- Using the Video for Everybody Embed Code http://camendesign.com/code/video_for_everybody -->
-	<video id="example_video_1" class="video-js" width="<?php echo $width; ?>" height="<?php echo $height; ?>" controls="controls" preload="auto" poster="<?php echo $itheora->getPoster(); ?>">
+	<video id="<?php echo $itheora->getVideoName(); ?>" class="video-js" width="<?php echo $width; ?>" height="<?php echo $height; ?>" controls="controls" preload="auto" poster="<?php echo $itheora->getPoster(); ?>">
 	  <?php if(($MP4_source || $flash_fallback) && $video = $itheora->getMP4Video()): ?>
 	  <source src="<?php echo $video; ?>" type='video/mp4; codecs="avc1.42E01E, mp4a.40.2"' />
 	  <?php endif; ?>
@@ -67,14 +68,19 @@ $itheora->setVideoName($video);
 	<!-- Download links provided for devices that can't play video in the browser. -->
 	<p class="vjs-no-video"><strong>Download Video:</strong>
 	  <?php if(($MP4_source) && $video = $itheora->getMP4Video()): ?>
-	  <a href="<?php echo $video; ?>">MP4</a>,
+	  <a href="<?php echo $video; ?>" target="_parent">MP4</a>,
 	  <?php endif; ?>
 	  <?php if($WEBM_source && $video = $itheora->getWebMVideo()): ?>
-	  <a href="<?php echo $video; ?>">WebM</a>,
+	  <a href="<?php echo $video; ?>" target="_parent">WebM</a>,
 	  <?php endif; ?>
-	  <a href="<?php echo $video; ?>">Ogg</a><br>
+	  <a href="<?php echo $itheora->getOggVideo(); ?>" target="_parent">Ogg</a><br>
+	  <!-- Share script -->
+	  <strong>Share this video:</strong>
+	  <br />
+	  <code><?php highlight_string('<object id="' . $itheora->getVideoName() . '" name="' . $itheora->getVideoName() . '" type="application/xhtml+xml" data="' . $itheora->getBaseUrl() . '/itheora.php?v=' . $itheora->getVideoName() . '&amp;w=' . $width . '&amp;h=' . $height . '" style="width:' . $width . '; height:' . $height . '"></object>'); ?></code>
+	  <br />
 	  <!-- Support VideoJS by keeping this link. -->
-	  <a href="http://videojs.com">HTML5 Video Player</a> by VideoJS
+	    <small>Powered by <a href="http://videojs.com" target="_parent">VideoJS</a> and <a href="https://github.com/marionline/itheora3-fork" target="_parent">itheora3-fork</a></small>
 	</p>
       </div>
       <!-- End VideoJS -->
