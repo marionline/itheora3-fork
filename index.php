@@ -18,7 +18,7 @@ include_once('lib/functions.php');
 	</p>
 	<?php echo createObjectTag(); ?>
 	<p>
-	    I can use directly html code and set width and height like I want:
+	    I can use directly html code and set width and height as I want:
 	    <br />
 	    <code>
 		<?php highlight_string('<object id="example" name="example" type="application/xhtml+xml" data="itheora.php?w=640&h=264" style="width: 640px; height: 264px;">
