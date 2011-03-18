@@ -1,6 +1,7 @@
 <?php
 //require_once('lib/ogg.class.php');
 require_once('lib/functions.php');
+require_once('lib/Zend/Cache.php');
 /**
  * itheora 
  * 
@@ -13,7 +14,6 @@ class itheora {
     protected $_videoName = 'example'; // Default value of videoName
     protected $_videoErrorName = 'error';
     protected $_videoStoreDir;
-    protected $_cacheDir;
     protected $_baseUrl;
     protected $_files = array();
     protected $_externalVideo = false; // Is set external video?
@@ -22,14 +22,17 @@ class itheora {
     protected $_supported_image = array('png', 'jpg', 'gif');
     protected $_mimetype_video = array();
     protected $_mimetype_image = array();
+    protected $_cache;
 
     /**
      * __construct 
      * 
+     * @param float $cache_lifetime Pass cache lifetime in seconds default 60
+     * @param mixed $cache_dir Provide another cache directory
      * @access protected
      * @return void
      */
-    function __construct() {
+    function __construct($cache_lifetime = 60 , $cache_dir = null) {
 	// Create supported mimetype image and video
 	foreach($this->_supported_image as $extension){
 	    if($extension == 'jpg')
@@ -42,15 +45,25 @@ class itheora {
 	// Local video store directory
 	$this->_videoStoreDir = dirname(__FILE__) . '/../video';
 
-	// Local cache directory
-	$this->_cacheDir = dirname(__FILE__) . '/../cache';
-
 	// The name of the server host
 	$this->_baseUrl = getBaseUrl();
 
-	// Check if cache directory exist and is writable, if not writable change chmod
-	if(is_dir($this->_cacheDir) && !is_writable($this->_cacheDir))
-	    chmod($this->_cacheDir, 0755); // 755 should be ok
+	// Start cache
+	$frontendOptions = array(
+	    'lifetime' => $cache_lifetime,
+	    'automatic_serialization' => true
+	);
+
+	if($cache_dir === null) {
+	    $backendOptions = array('cache_dir' => dirname(__FILE__) . '/../cache/');
+	} else {
+	    $backendOptions = array('cache_dir' => $cache_dir);
+	}
+
+	$this->_cache = Zend_Cache::factory('Core',
+	    'File',
+	    $frontendOptions,
+	    $backendOptions);
 
 	// Get file, default is example
 	$this->getFiles();
@@ -123,22 +136,27 @@ class itheora {
      * @return bool
      */
     protected function getExternalFiles() {
-	$extensions = array_merge($this->_supported_video, $this->_supported_image);
-	foreach($extensions as $extension) {
-	    // Basename file
-	    $file = $this->_videoName . '.' . $extension;
-	    // Get headers of $file
-	    $headers = get_headers($this->completeUrl($file), 1);
-	    // Check if HTTP respons is not a 404 error
-	    if(substr($headers[0], 9, 3) != '404') {
-		// Check if file is supported
-		if($this->is_supported_image($headers) || $this->is_supported_video($headers)) {
-		    $this->_files[$extension] = $file;
+	$id = str_replace(array('/', '\\', ':', '.', '-'), '_', $this->_externalUrl . $this->_videoName);
+	if(!($files = $this->_cache->load($id))) {
+	    $extensions = array_merge($this->_supported_video, $this->_supported_image);
+	    foreach($extensions as $extension) {
+		// Basename file
+		$file = $this->_videoName . '.' . $extension;
+		// Get headers of $file
+		$headers = get_headers($this->completeUrl($file), 1);
+		// Check if HTTP respons is not a 404 error
+		if(substr($headers[0], 9, 3) != '404') {
+		    // Check if file is supported
+		    if($this->is_supported_image($headers) || $this->is_supported_video($headers)) {
+			$this->_files[$extension] = $file;
+		    }
 		}
 	    }
+	    $this->_cache->save($this->_files, $id, array('external'));
+	} else {
+	    $this->_files = $files;
 	}
 
-	$files=$this->_files;
 	if(!$this->check_founded_files()) {
 	    return $this->setVideoName($this->_videoErrorName);
 	} else {
@@ -163,18 +181,24 @@ class itheora {
      * @return bool False if no file are found
      */
     protected function getLocalFiles() {
-	if(is_dir($this->video())){
-	    if ( $handle = opendir($this->video()) ) {
-		while (false !== ($file = readdir($handle))) {
-		    $this->_files[pathinfo($file, PATHINFO_EXTENSION)] = $file;
+	$id = str_replace(array('/', '\\', ':', '.', '-'), '_', $this->_videoStoreDir . $this->_videoName);
+	if(!($files = $this->_cache->load($id))) {
+	    if(is_dir($this->video())){
+		if ( $handle = opendir($this->video()) ) {
+		    while (false !== ($file = readdir($handle))) {
+			$this->_files[pathinfo($file, PATHINFO_EXTENSION)] = $file;
+		    }
+		    closedir($handle);
 		}
-		closedir($handle);
+		$this->_cache->save($this->_files, $id, array('internal'));
+	    } else {
+		if($this->_videoName != $this->_videoErrorName) {
+		    $this->setVideoName($this->_videoErrorName);
+		    return $this->getLocalFiles();
+		}
 	    }
 	} else {
-	    if($this->_videoName != $this->_videoErrorName) {
-		$this->setVideoName($this->_videoErrorName);
-		return $this->getLocalFiles();
-	    }
+	    $this->_files = $files;
 	}
 
 	return $this->check_founded_files();
@@ -353,15 +377,29 @@ class itheora {
 	if($filetypes == null){
 	    $filetypes = $this->_supported_image;
 	}
-	if(is_array($filetypes)){
-	    foreach( $filetypes as $filetype ) {
-		if(isset($this->_files[$filetype]))
-		    if($this->_externalVideo){
-			return getimagesize($this->completeUrl($this->_files[$filetype]));
-		    } else {
-			return getimagesize($this->_videoStoreDir . '/' . $this->_videoName .  '/' .$this->_files[$filetype]);
-		    }
+	if($this->_externalVideo){
+	    $string = implode('_', $filetypes) . $this->_externalUrl . $this->_videoName . 'external';
+	} else {
+	    $string = implode('_', $filetypes) . $this->_videoStoreDir . $this->_videoName . 'internal';
+	}
+	$id = str_replace(array('/', '\\', ':', '.', '-'), '_', $string);
+	if(!($return = $this->_cache->load($id))) {
+	    if(is_array($filetypes)){
+		foreach( $filetypes as $filetype ) {
+		    if(isset($this->_files[$filetype]))
+			if($this->_externalVideo){
+			    $image_size = getimagesize($this->completeUrl($this->_files[$filetype]));
+			    $this->_cache->save($image_size, $id, array('imagesize'));
+			    return $image_size;
+			} else {
+			    $image_size = getimagesize($this->_videoStoreDir . '/' . $this->_videoName .  '/' .$this->_files[$filetype]);
+			    $this->_cache->save($image_size, $id, array('imagesize'));
+			    return $image_size;
+			}
+		}
 	    }
+	} else {
+	    return $return;
 	}
 
 	// If no pictures are found return false
