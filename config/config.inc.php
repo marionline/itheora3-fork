@@ -11,3 +11,9 @@ $itheora_config['WEBM_source'] = true;
  * Use VideoJS flash fallback?
  */
 $itheora_config['flash_fallback'] = true;
+
+/**
+ * Admin username and password
+ */
+$itheora_config['admin_username'] = 'admin';
+$itheora_config['admin_pass'] = 'adminpass';

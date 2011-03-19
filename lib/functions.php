@@ -2,7 +2,7 @@
 /**
  * Usefull helper function to use with itheora3-fork 
  */
-require_once('lib/itheora.class.php');
+require_once(dirname(__FILE__) . '/../lib/itheora.class.php');
 
 /**
  * createObjectTag 
@@ -118,3 +118,25 @@ function getBaseUrl() {
 	. $_SERVER['HTTP_HOST']
 	. pathinfo($_SERVER['PHP_SELF'], PATHINFO_DIRNAME);
 }
+
+/**
+ * rrmdir 
+ * Remove directory recursivley
+ * http://www.php.net/manual/en/function.rmdir.php#98622
+ * 
+ * @param mixed $dir 
+ * @access public
+ * @return void
+ */
+function rrmdir($dir) {
+    if (is_dir($dir)) {
+	$objects = scandir($dir);
+	foreach ($objects as $object) {
+	    if ($object != "." && $object != "..") {
+		if (filetype($dir."/".$object) == "dir") rrmdir($dir."/".$object); else unlink($dir."/".$object);
+	    }
+	}
+	reset($objects);
+	rmdir($dir);
+    }
+} 

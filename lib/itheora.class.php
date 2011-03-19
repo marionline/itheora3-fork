@@ -1,7 +1,7 @@
 <?php
 //require_once('lib/ogg.class.php');
-require_once('lib/functions.php');
-require_once('lib/Zend/Cache.php');
+require_once(dirname(__FILE__) . '/../lib/functions.php');
+require_once(dirname(__FILE__) . '/../lib/Zend/Cache.php');
 /**
  * itheora 
  * 
@@ -453,5 +453,15 @@ class itheora {
      */
     public function getWebMVideo() {
 	return $this->getVideo('webm');
+    }
+
+    /**
+     * getSupportedMimetype 
+     * 
+     * @access public
+     * @return array of supported mimetype
+     */
+    public function getSupportedMimetype() {
+	return array_merge($this->_mimetype_video, $this->_mimetype_image);
     }
 }
