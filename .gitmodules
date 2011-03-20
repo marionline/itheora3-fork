@@ -1,3 +1,6 @@
 [submodule "video-js"]
 	path = video-js
 	url = https://github.com/zencoder/video-js.git
+[submodule "lib/aws-sdk"]
+	path = lib/aws-sdk
+	url = https://github.com/amazonwebservices/aws-sdk-for-php.git
