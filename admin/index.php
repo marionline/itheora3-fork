@@ -1,6 +1,10 @@
 <?php
 require_once('../config/config.inc.php');
 require_once('../lib/itheora.class.php');
+$path_local_zend = dirname(__FILE__) . '/../lib';
+set_include_path(get_include_path() . PATH_SEPARATOR . $path_local_zend);
+require_once("Zend/Loader/Autoloader.php");
+$autoloader = Zend_Loader_Autoloader::getInstance();
 
 session_start();
 if(!isset($_SESSION['login'])){
@@ -59,7 +63,16 @@ $itheora = new itheora();
 	    ?>
 	</ul>
 	<p><a href="addfile.php">Add File Locally</a></p>
-	<h2>List of remote files</h2>
+	<h2>List of remote files (using Zend_Cloud):</h2>
+	<?php
+	    $storage = Zend_Cloud_StorageService_Factory::getAdapter(array(
+		Zend_Cloud_StorageService_Factory::STORAGE_ADAPTER_KEY => 'Zend_Cloud_StorageService_Adapter_S3',
+		Zend_Cloud_StorageService_Adapter_S3::AWS_ACCESS_KEY   => $itheora_config['amazonKey'],
+		Zend_Cloud_StorageService_Adapter_S3::AWS_SECRET_KEY   => $itheora_config['amazonSecret'],
+		Zend_Cloud_StorageService_Adapter_S3::BUCKET_NAME      => $itheora_config['bucket_name'],
+	    ));
+	    var_dump($storage->listItems('/'));
+	?>
 	<p>Coming soon...</p>
     </body>
 </html>

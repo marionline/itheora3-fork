@@ -17,3 +17,7 @@ $itheora_config['flash_fallback'] = true;
  */
 $itheora_config['admin_username'] = 'admin';
 $itheora_config['admin_pass'] = 'adminpass';
+
+$itheora_config['amazonKey'] = 'amazonKey';
+$itheora_config['amazonSecret'] = 'amazonSecret';
+$itheora_config['bucket_name'] = 'bucket_name';
