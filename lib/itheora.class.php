@@ -220,7 +220,7 @@ class itheora {
      * getFilesFromCloud 
      * 
      * @access protected
-     * @return void
+     * @return bool False if no file are found
      */
     protected function getFilesFromCloud() {
 	// If bucket_name is wrong
@@ -544,5 +544,20 @@ class itheora {
      */
     public function getSupportedMimetype() {
 	return array_merge($this->_mimetype_video, $this->_mimetype_image);
+    }
+
+    /**
+     * useFilesInCloud 
+     * are itheora using files from Amazon S3?
+     * 
+     * @access public
+     * @return bool
+     */
+    public function useFilesInCloud() {
+	if( $this->_s3 === null ) {
+	    return false;
+	} else {
+	    return true;
+	}
     }
 }

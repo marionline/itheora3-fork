@@ -8,12 +8,13 @@ require_once(dirname(__FILE__) . '/../lib/itheora.class.php');
  * createObjectTag 
  * 
  * @param string $video 
- * @param mixed $width 
- * @param mixed $height 
+ * @param int $width 
+ * @param int $height 
+ * @param bool $useFilesInCloud 
  * @access public
  * @return html code
  */
-function createObjectTag($video = 'example', $width = null, $height = null){
+function createObjectTag($video = 'example', $width = null, $height = null, $useFilesInCloud = false){
     // If no width or height are passed I use the image width and height
     if(is_null($width) || is_null($height)){
 	$itheora = new itheora();
@@ -37,7 +38,13 @@ function createObjectTag($video = 'example', $width = null, $height = null){
 	$height_url = '&amp;h=' . $posterSize[1];
     }
 
-    return '<object id="' . $video . '" name="' . $video . '" class="itheora3-fork" type="application/xhtml+xml" data="itheora.php?v=' . $video . $width_url . $height_url . '" style="' . $width_style . ' ' . $height_style . '"> 
+    if($useFilesInCloud) {
+	$key = 'r';
+    } else {
+	$key = 'v';
+    }
+
+    return '<object id="' . $video . '" name="' . $video . '" class="itheora3-fork" type="application/xhtml+xml" data="itheora.php?' . $key . '=' . $video . $width_url . $height_url . '" style="' . $width_style . ' ' . $height_style . '"> 
 	</object>';
 }
 
@@ -58,6 +65,12 @@ function createVideoJS(itheora &$itheora, array &$itheora_config, $width = null,
 	$width = $posterSize[0].'px';
     if($height === null)
 	$height = $posterSize[1].'px';
+
+    if($itheora->useFilesInCloud()) {
+	$key = 'r';
+    } else {
+	$key = 'v';
+    }
 
 ?>
       <!-- Begin VideoJS -->
@@ -96,7 +109,7 @@ function createVideoJS(itheora &$itheora, array &$itheora_config, $width = null,
 	  <!-- Share script -->
 	  <strong>Share this video:</strong>
 	  <br />
-	  <span><?php echo htmlspecialchars('<object id="' . $itheora->getVideoName() . '" name="' . $itheora->getVideoName() . '" type="application/xhtml+xml" data="' . $itheora->getBaseUrl() . '/itheora.php?v=' . $itheora->getVideoName() . '&amp;w=' . $width . '&amp;h=' . $height . '" style="width:' . $width . '; height:' . $height . '"></object>'); ?></span>
+	  <span><?php echo htmlspecialchars('<object id="' . $itheora->getVideoName() . '" name="' . $itheora->getVideoName() . '" type="application/xhtml+xml" data="' . $itheora->getBaseUrl() . '/itheora.php?' . $key. '=' . $itheora->getVideoName() . '&amp;w=' . $width . '&amp;h=' . $height . '" style="width:' . $width . '; height:' . $height . '"></object>'); ?></span>
 	  <br />
 	  <!-- Support VideoJS by keeping this link. -->
 	    <small>Powered by <a href="http://videojs.com" target="_parent">VideoJS</a> and <a href="https://github.com/marionline/itheora3-fork" target="_parent">itheora3-fork</a></small>
