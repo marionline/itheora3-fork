@@ -23,7 +23,8 @@ class itheora {
     protected $_mimetype_video = array();
     protected $_mimetype_image = array();
     protected $_cache;
-    protected $_storage = null;
+    protected $_s3 = null;
+    protected $_s3_config;
 
     /**
      * __construct 
@@ -33,7 +34,7 @@ class itheora {
      * @access protected
      * @return void
      */
-    function __construct($cache_lifetime = 60 , $cache_dir = null, &$storage = null) {
+    function __construct($cache_lifetime = 43200 , $cache_dir = null, &$s3 = null, array $s3_config = array()) {
 	// Create supported mimetype image and video
 	foreach($this->_supported_image as $extension){
 	    if($extension == 'jpg')
@@ -52,7 +53,8 @@ class itheora {
 	// Start cache
 	$frontendOptions = array(
 	    'lifetime' => $cache_lifetime,
-	    'automatic_serialization' => true
+	    'automatic_serialization' => true,
+	    'automatic_cleaning_factor' => 10,
 	);
 
 	if($cache_dir === null) {
@@ -61,9 +63,10 @@ class itheora {
 	    $backendOptions = array('cache_dir' => $cache_dir);
 	}
 
-	if($storage !== null){
-	    $this->_storage = $storage;
+	if($s3 !== null){
+	    $this->_s3 = $s3;
 	}
+	$this->_s3_config = $s3_config;
 
 	$this->_cache = Zend_Cache::factory('Core',
 	    'File',
@@ -155,6 +158,8 @@ class itheora {
 		    if($this->is_supported_image($headers) || $this->is_supported_video($headers)) {
 			$this->_files[$extension] = $file;
 		    }
+		} elseif($this->_videoName == $this->_videoErrorName) {
+		    throw new Exception('No error video is founded');
 		}
 	    }
 	    $this->_cache->save($this->_files, $id, array('external'));
@@ -196,6 +201,8 @@ class itheora {
 		    closedir($handle);
 		}
 		$this->_cache->save($this->_files, $id, array('internal'));
+	    } elseif($this->_videoName == $this->_videoErrorName) {
+		throw new Exception('No error video is founded');
 	    } else {
 		if($this->_videoName != $this->_videoErrorName) {
 		    $this->setVideoName($this->_videoErrorName);
@@ -216,7 +223,33 @@ class itheora {
      * @return void
      */
     protected function getFilesFromCloud() {
-	// TODO
+	// If bucket_name is wrong
+	if(!$this->_s3->if_bucket_exists($this->_s3_config['bucket_name'])) {
+	    throw new Exception('The bucket ' . $this->_s3_config['bucket_name'] . ' doesn\'t exists');
+	}
+	$id = str_replace(array('/', '\\', ':', '.', '-'), '_', $this->_s3_config['bucket_name'] . $this->_videoName);
+	if(!($files = $this->_cache->load($id))) {
+	    // Get the objects list
+	    if($this->_videoName == $this->_videoErrorName) {
+		$respons = $this->_s3->list_objects($this->_s3_config['bucket_name'], array('prefix' => $this->_videoName . '/'));
+		if(!$respons->isOK())
+		    throw new Exception('No error video is founded');
+	    }
+	    $objects = $this->_s3->get_object_list($this->_s3_config['bucket_name'], array('prefix' => $this->_videoName . '/'));
+	    foreach($objects as $i => $file) {
+		if($i > 0)
+		    $this->_files[pathinfo($file, PATHINFO_EXTENSION)] = $file;
+	    }
+	    $this->_cache->save($this->_files, $id, array('cloudfiles'));
+	} else {
+	    $this->_files = $files;
+	}
+
+	if(!$this->check_founded_files()) {
+	    return $this->setVideoName($this->_videoErrorName);
+	} else {
+	    return true;
+	}
     }
 
     /**
@@ -231,7 +264,7 @@ class itheora {
 	    // Videos are store remotely
 	    return $this->getExternalFiles();
 	} else {
-	    if($this->_storage === null){
+	    if($this->_s3 === null){
 		// Videos are store locally
 		return $this->getLocalFiles();
 	    } else {
@@ -374,11 +407,29 @@ class itheora {
 	if($filetypes === null){
 	    $filetypes = $this->_supported_image;
 	}
-	if(is_array($filetypes)){
-	    foreach( $filetypes as $filetype ) {
-		if(isset($this->_files[$filetype]))
-		    return $this->completeUrl($this->_files[$filetype]);
+	if($this->_externalVideo){
+	    $string = implode('_', $filetypes) . $this->_externalUrl . $this->_videoName . 'external_url';
+	} elseif($this->_s3 !== null) {
+	    $string = implode('_', $filetypes) . $this->_s3_config['bucket_name'] . $this->_videoName . 'external_url';
+	} else {
+	    $string = implode('_', $filetypes) . $this->_videoStoreDir . $this->_videoName . 'internal_url';
+	}
+	$id = str_replace(array('/', '\\', ':', '.', '-'), '_', $string);
+
+	if(!($return = $this->_cache->load($id))) {
+	    if(is_array($filetypes)){
+		foreach( $filetypes as $filetype ) {
+		    if(isset($this->_files[$filetype])) {
+			if($this->_s3 !== null) {
+			    return $this->_s3->get_object_url($this->_s3_config['bucket_name'], $this->_files[$filetype]);
+			} else {
+			    return $this->completeUrl($this->_files[$filetype]);
+			}
+		    }
+		}
 	    }
+	} else {
+	    return $return;
 	}
 
 	// If no pictures are found return false
@@ -398,9 +449,11 @@ class itheora {
 	    $filetypes = $this->_supported_image;
 	}
 	if($this->_externalVideo){
-	    $string = implode('_', $filetypes) . $this->_externalUrl . $this->_videoName . 'external';
+	    $string = implode('_', $filetypes) . $this->_externalUrl . $this->_videoName . 'external_size';
+	} elseif($this->_s3 !== null) {
+	    $string = implode('_', $filetypes) . $this->_s3_config['bucket_name'] . $this->_videoName . 'external_size';
 	} else {
-	    $string = implode('_', $filetypes) . $this->_videoStoreDir . $this->_videoName . 'internal';
+	    $string = implode('_', $filetypes) . $this->_videoStoreDir . $this->_videoName . 'internal_size';
 	}
 	$id = str_replace(array('/', '\\', ':', '.', '-'), '_', $string);
 	if(!($return = $this->_cache->load($id))) {
@@ -409,6 +462,10 @@ class itheora {
 		    if(isset($this->_files[$filetype]))
 			if($this->_externalVideo){
 			    $image_size = getimagesize($this->completeUrl($this->_files[$filetype]));
+			    $this->_cache->save($image_size, $id, array('imagesize'));
+			    return $image_size;
+			} elseif($this->_s3 !== null) {
+			    $image_size = getimagesize($this->getPoster($filetypes));
 			    $this->_cache->save($image_size, $id, array('imagesize'));
 			    return $image_size;
 			} else {
@@ -435,7 +492,11 @@ class itheora {
      */
     protected function getVideo($extension) {
 	if(isset($this->_files[$extension]))
-	    return $this->completeUrl($this->_files[$extension]);
+	    if($this->_s3 !== null) {
+		return $this->_s3->get_object_url($this->_s3_config['bucket_name'], $this->_files[$extension]);
+	    } else {
+		return $this->completeUrl($this->_files[$extension]);
+	    }
 	else
 	    return false;
     }

@@ -1,6 +1,8 @@
 <?php
+$start_time = microtime(true);
 require_once('../config/config.inc.php');
 require_once('../lib/itheora.class.php');
+require_once('../lib/aws-sdk/sdk.class.php');
 
 session_start();
 if(!isset($_SESSION['login'])){
@@ -61,5 +63,16 @@ $itheora = new itheora();
 	<p><a href="addfile.php">Add File Locally</a></p>
 	<h2>List of remote files:</h2>
 	<p>Coming soon...</p>
+	<?php
+	    $s3 = new AmazonS3();
+	    $s3->set_region($itheora_config['s3_region']);
+	    $s3->set_vhost('media.marionline.it');
+	    var_dump($s3->get_object_list($itheora_config['bucket_name']));
+	    var_dump($s3->get_object_url($itheora_config['bucket_name'], 'example.ogv'));
+	?>
+	<?php
+	    $time = microtime(true) - $start_time;
+	    echo '<p>' . $time . '</p>';
+	    ?>
     </body>
 </html>

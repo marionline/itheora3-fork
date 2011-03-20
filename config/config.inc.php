@@ -17,3 +17,10 @@ $itheora_config['flash_fallback'] = true;
  */
 $itheora_config['admin_username'] = 'admin';
 $itheora_config['admin_pass'] = 'adminpass';
+
+/**
+ * AmazonS3 config options  
+ */
+$itheora_config['bucket_name'] = 'media.marionline.it';
+$itheora_config['s3_region'] = 'AmazonS3::REGION_EU_W1';
+$itheora_config['s3_vhost'] = 'media.marionline.it';
