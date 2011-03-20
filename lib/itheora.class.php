@@ -23,6 +23,7 @@ class itheora {
     protected $_mimetype_video = array();
     protected $_mimetype_image = array();
     protected $_cache;
+    protected $_storage = null;
 
     /**
      * __construct 
@@ -32,7 +33,7 @@ class itheora {
      * @access protected
      * @return void
      */
-    function __construct($cache_lifetime = 60 , $cache_dir = null) {
+    function __construct($cache_lifetime = 60 , $cache_dir = null, &$storage = null) {
 	// Create supported mimetype image and video
 	foreach($this->_supported_image as $extension){
 	    if($extension == 'jpg')
@@ -58,6 +59,10 @@ class itheora {
 	    $backendOptions = array('cache_dir' => dirname(__FILE__) . '/../cache/');
 	} else {
 	    $backendOptions = array('cache_dir' => $cache_dir);
+	}
+
+	if($storage !== null){
+	    $this->_storage = $storage;
 	}
 
 	$this->_cache = Zend_Cache::factory('Core',
@@ -205,6 +210,16 @@ class itheora {
     }
 
     /**
+     * getFilesFromCloud 
+     * 
+     * @access protected
+     * @return void
+     */
+    protected function getFilesFromCloud() {
+	// TODO
+    }
+
+    /**
      * getFiles 
      * 
      * @access protected
@@ -216,8 +231,13 @@ class itheora {
 	    // Videos are store remotely
 	    return $this->getExternalFiles();
 	} else {
-	    // Videos are store locally
-	    return $this->getLocalFiles();
+	    if($this->_storage === null){
+		// Videos are store locally
+		return $this->getLocalFiles();
+	    } else {
+		// Videos are store in the Cloud access with Zend_Cloud
+		return $this->getFilesFromCloud();
+	    }
 	}
     }
 

@@ -4,8 +4,19 @@ include_once('config/config.inc.php');
 require_once('lib/itheora.class.php');
 
 // Get parameters from $_GET array
-$video  = isset($_GET['v']) ? $_GET['v'] : 'example';
-$itheora = new itheora();
+if(isset($_GET['v'])){
+    $video = $_GET['v'];
+}
+
+if(isset($_GET['r'])){
+    // If is a remote video instance Zend_Cloud
+    $video  = $_GET['r'];
+    // TODO Add aws-sdk-php
+    //$itheora = new itheora(60, null, $S3);
+    $itheora = new itheora();
+} else {
+    $itheora = new itheora();
+}
 $itheora->setVideoName($video);
 $posterSize = $itheora->getPosterSize();
 
