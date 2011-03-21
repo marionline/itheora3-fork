@@ -7,44 +7,56 @@ require_once(dirname(__FILE__) . '/../lib/itheora.class.php');
 /**
  * createObjectTag 
  * 
- * @param string $video 
- * @param int $width 
- * @param int $height 
- * @param bool $useFilesInCloud 
+ * @param array $options 
+ * @param 'width' => null
+ * @param 'height' => null 
+ * @param 'useFilesInCloud' => false
  * @access public
  * @return html code
  */
-function createObjectTag($video = 'example', $width = null, $height = null, $useFilesInCloud = false){
+function createObjectTag(array $options = array('video' => 'example', 'width' => null, 'height' => null, 'useFilesInCloud' => false)){
+    if(!isset($options['video']))
+	$options['video'] = 'example';
+
+    if(!isset($options['width']))
+	$options['width'] = null;
+
+    if(!isset($options['height']))
+	$options['height'] = null;
+
+    if(!isset($options['useFilesInCloud']))
+	$options['useFilesInCloud'] = false;
+
     // If no width or height are passed I use the image width and height
-    if(is_null($width) || is_null($height)){
+    if( $options['width'] === null || $options['height'] === null ) {
 	$itheora = new itheora();
-	$itheora->setVideoName($video);
+	$itheora->setVideoName($options['video']);
 	$posterSize = $itheora->getPosterSize();
     }
 
-    if(!is_null($width)) {
-	$width_style = 'width: ' . $width . 'px;';
-	$width_url = '&amp;w=' . $width;
+    if($options['width'] !== null) {
+	$width_style = 'width: ' . $options['width'] . 'px;';
+	$width_url = '&amp;w=' . $options['width'];
     } else {
 	$width_style = 'width: ' . $posterSize[0] . 'px;';
 	$width_url = '&amp;w=' . $posterSize[0];
     }
 
-    if(!is_null($height)) {
-	$height_style = 'height: ' . $height . 'px;';
-	$height_url = '&amp;h=' . $height;
+    if($options['height'] !== null) {
+	$height_style = 'height: ' . $options['height'] . 'px;';
+	$height_url = '&amp;h=' . $options['height'];
     } else {
 	$height_style = 'height: ' . $posterSize[1] . 'px;';
 	$height_url = '&amp;h=' . $posterSize[1];
     }
 
-    if($useFilesInCloud) {
+    if($options['useFilesInCloud']) {
 	$key = 'r';
     } else {
 	$key = 'v';
     }
 
-    return '<object id="' . $video . '" name="' . $video . '" class="itheora3-fork" type="application/xhtml+xml" data="itheora.php?' . $key . '=' . $video . $width_url . $height_url . '" style="' . $width_style . ' ' . $height_style . '"> 
+    return '<object id="' . $options['video'] . '" name="' . $options['video'] . '" class="itheora3-fork" type="application/xhtml+xml" data="itheora.php?' . $key . '=' . $options['video'] . $width_url . $height_url . '" style="' . $width_style . ' ' . $height_style . '"> 
 	</object>';
 }
 
@@ -111,6 +123,16 @@ function createVideoJS(itheora &$itheora, array &$itheora_config, $width = null,
 	  <br />
 	  <span><?php echo htmlspecialchars('<object id="' . $itheora->getVideoName() . '" name="' . $itheora->getVideoName() . '" type="application/xhtml+xml" data="' . $itheora->getBaseUrl() . '/itheora.php?' . $key. '=' . $itheora->getVideoName() . '&amp;w=' . $width . '&amp;h=' . $height . '" style="width:' . $width . '; height:' . $height . '"></object>'); ?></span>
 	  <br />
+	  <?php if($itheora->useFilesInCloud()): ?>
+	      <strong>Download using torrent:</strong>
+	      <?php if(($itheora_config['MP4_source']) && $video = $itheora->getMP4Video()): ?>
+	      <a href="<?php echo $video; ?>?torrent" target="_parent">MP4.torrent</a>,
+	      <?php endif; ?>
+	      <?php if($itheora_config['WEBM_source'] && $video = $itheora->getWebMVideo()): ?>
+	      <a href="<?php echo $video; ?>?torrent" target="_parent">WebM.torrent</a>,
+	      <?php endif; ?>
+	      <a href="<?php echo $itheora->getOggVideo(); ?>?torrent" target="_parent">Ogg.torrent</a><br>
+	  <?php endif; ?>
 	  <!-- Support VideoJS by keeping this link. -->
 	    <small>Powered by <a href="http://videojs.com" target="_parent">VideoJS</a> and <a href="https://github.com/marionline/itheora3-fork" target="_parent">itheora3-fork</a></small>
 	</p>

@@ -21,9 +21,9 @@ include_once('lib/functions.php');
 	    <br />
 	    I don't pass any parameters so the output use default video with the width and heigth take from poster image:
 	    <br />
-	    <code><?php highlight_string('<?php echo createObjectTag(); ?>'); ?></code>
+	    <code><?php highlight_string('<?php echo createObjectTag(array(\'useFilesInCloud\' => true)); ?>'); ?></code>
 	    <br />
-	    <?php echo createObjectTag(); ?>
+	    <?php echo createObjectTag(array('useFilesInCloud' => true)); ?>
 	</p>
 	<p>
 	    I can use directly html code and set width and height as I want:
@@ -40,28 +40,28 @@ include_once('lib/functions.php');
 	    Or use createObjectTag() function helper and set my preferer width and heigth:
 	    <br />
 	    <code>
-		<?php highlight_string('<?php echo createObjectTag(\'example\', 300, 400); ?>'); ?>
+		<?php highlight_string('<?php echo createObjectTag(array(\'video\' => \'example\', \'width\' => 300, \'height\' => 400, \'useFilesInCloud\' => true)); ?>'); ?>
 	    </code>
 	    <br />
-	    <?php echo createObjectTag('example', 300, 400); ?>
+	    <?php echo createObjectTag(array('video' => 'example', 'width' => 300, 'height' => 400, 'useFilesInCloud' => true)); ?>
 	</p>
 	<p>
 	    Or just use createObjectTag() function with just video name, the function retrive alone the width and height to use.
 	    <br />
 	    <code>
-		<?php highlight_string('<?php echo createObjectTag(\'oceans-clip\'); ?>'); ?>
+		<?php highlight_string('<?php echo createObjectTag(array(\'video\' => \'oceans-clip\', \'useFilesInCloud\' => true)); ?>'); ?>
 	    </code>
 	    <br />
-	    <?php echo createObjectTag('oceans-clip'); ?>
+	    <?php echo createObjectTag(array('video' => 'oceans-clip', 'useFilesInCloud' => true)); ?>
 	</p>
 	<p>
 	    If no file are found we have the error video:
 	    <br />
 	    <code>
-		<?php highlight_string('<?php echo createObjectTag(\'ocean-clip-not-exist\'); ?>'); ?>
+		<?php highlight_string('<?php echo createObjectTag(array(\'video\' => \'ocean-clip-not-exist\', \'useFilesInCloud\' => true)); ?>'); ?>
 	    </code>
 	    <br />
-	    <?php echo createObjectTag('ocean-clip-not-exist'); ?>
+	    <?php echo createObjectTag(array('video' => 'ocean-clip-not-exist', 'useFilesInCloud' => true)); ?>
 	</p>
     </body>
 </html>
