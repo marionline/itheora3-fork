@@ -201,8 +201,6 @@ class itheora {
 		    closedir($handle);
 		}
 		$this->_cache->save($this->_files, $id, array('internal'));
-	    } elseif($this->_videoName == $this->_videoErrorName) {
-		throw new Exception('No error video is founded');
 	    } else {
 		if($this->_videoName != $this->_videoErrorName) {
 		    $this->setVideoName($this->_videoErrorName);
