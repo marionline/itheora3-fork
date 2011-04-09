@@ -1,3 +1,16 @@
+REQUIREMENTS
+============
+* GD Library
+* CURL
+
+LICENSE
+=======
+
+GPL version 3
+
+WHY THIS FORK?
+==============
+
 I want to create this project to give to wp-itheora plugin for Wordpress a
 new and update video player.
 
