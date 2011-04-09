@@ -2,6 +2,7 @@
 // Include configuration
 include_once('config/config.inc.php');
 require_once('lib/itheora.class.php');
+require_once('lib/functions.php');
 require_once('lib/aws-sdk/sdk.class.php');
 
 // Get parameters from $_GET array
@@ -10,12 +11,11 @@ if(isset($_GET['v']) && $_GET['v'] != ''){
 }
 
 if(isset($_GET['r'])){
-    // If is a remote video instance Zend_Cloud
     if($_GET['r'] != '')
 	$video  = $_GET['r'];
 
     // Inizialise AmazonS3 and itheora
-    $s3 = new AmazonS3();
+    $s3 = new AmazonS3($itheora_config['aws_key'], $itheora_config['aws_secret_key']);
     if(isset($itheora_config['s3_vhost']) && $itheora_config['s3_vhost'] != '')
 	$s3->set_vhost($itheora_config['s3_vhost']);
     $itheora = new itheora(60, null, $s3, $itheora_config);
@@ -24,6 +24,9 @@ if(isset($_GET['r'])){
 }
 if(isset($video))
     $itheora->setVideoName($video);
+else
+    // Because no video is set, retrive the default video
+    $itheora->getFiles();
 
 $posterSize = $itheora->getPosterSize();
 
@@ -51,6 +54,15 @@ $height = $height.'px';
 
   <!-- Include the VideoJS Stylesheet -->
   <link rel="stylesheet" href="<?php echo $itheora->getBaseUrl(); ?>/video-js/video-js.css" type="text/css" media="screen" title="Video JS">
+      <?php
+      if(isset($_GET['skin']) && is_readable(dirname(__FILE__) . '/video-js/skins/' . $_GET['skin'] . '.css'))
+	  $skin = $_GET['skin'];
+      else
+	  $skin = null;
+
+      if($skin !== null)
+	  echo '<link rel="stylesheet" href="' . $itheora->getBaseUrl() . '/video-js/skins/' . $_GET['skin'] . '.css" type="text/css" media="screen" title="Video JS">';
+      ?>
 
       <style type="text/css">
 	    html, body {
@@ -60,7 +72,7 @@ $height = $height.'px';
 </head>
 <body>
     <?php
-    createVideoJS($itheora, $itheora_config, $width, $height);
+      createVideoJS($itheora, $itheora_config, $width, $height, $skin);
     ?>
 </body>
 </html>

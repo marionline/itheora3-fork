@@ -3,6 +3,8 @@
  * Usefull helper function to use with itheora3-fork 
  */
 require_once(dirname(__FILE__) . '/../lib/itheora.class.php');
+require_once(dirname(__FILE__) . '/../lib/aws-sdk/sdk.class.php');
+
 
 /**
  * createObjectTag 
@@ -11,10 +13,12 @@ require_once(dirname(__FILE__) . '/../lib/itheora.class.php');
  * @param 'width' => null
  * @param 'height' => null 
  * @param 'useFilesInCloud' => false
+ * @param array $itheora_config If you want to use files store in cloud need to pass the configuration
+ * @param string $skin          Skin to be use (default video-js), other hu, vim, tube
  * @access public
  * @return html code
  */
-function createObjectTag(array $options = array('video' => 'example', 'width' => null, 'height' => null, 'useFilesInCloud' => false)){
+function createObjectTag(array $options = array('video' => 'example', 'width' => null, 'height' => null, 'useFilesInCloud' => false), array $itheora_config = array(), $skin = null) {
     if(!isset($options['video']))
 	$options['video'] = 'example';
 
@@ -29,7 +33,15 @@ function createObjectTag(array $options = array('video' => 'example', 'width' =>
 
     // If no width or height are passed I use the image width and height
     if( $options['width'] === null || $options['height'] === null ) {
-	$itheora = new itheora();
+	if($options['useFilesInCloud']) {
+	    // Inizialise AmazonS3 and itheora
+	    $s3 = new AmazonS3($itheora_config['aws_key'], $itheora_config['aws_secret_key']);
+	    if(isset($itheora_config['s3_vhost']) && $itheora_config['s3_vhost'] != '')
+		$s3->set_vhost($itheora_config['s3_vhost']);
+	    $itheora = new itheora(60, null, $s3, $itheora_config);
+	} else {
+	    $itheora = new itheora();
+	}
 	$itheora->setVideoName($options['video']);
 	$posterSize = $itheora->getPosterSize();
     }
@@ -56,7 +68,10 @@ function createObjectTag(array $options = array('video' => 'example', 'width' =>
 	$key = 'v';
     }
 
-    return '<object id="' . $options['video'] . '" name="' . $options['video'] . '" class="itheora3-fork" type="application/xhtml+xml" data="itheora.php?' . $key . '=' . $options['video'] . $width_url . $height_url . '" style="' . $width_style . ' ' . $height_style . '"> 
+    if($skin !== null)
+	$skin = '&amp;skin=' . $skin;
+
+    return '<object id="' . $options['video'] . '" name="' . $options['video'] . '" class="itheora3-fork" type="application/xhtml+xml" data="itheora.php?' . $key . '=' . $options['video'] . $width_url . $height_url . $skin . '" style="' . $width_style . ' ' . $height_style . '"> 
 	</object>';
 }
 
@@ -67,10 +82,11 @@ function createObjectTag(array $options = array('video' => 'example', 'width' =>
  * @param array $itheora_config Pass itheora configuration
  * @param mixed $width          Force width 
  * @param mixed $height         Force height 
+ * @param string $skin          Skin to be use (default video-js), other hu, vim, tube
  * @access public
  * @return void
  */
-function createVideoJS(itheora &$itheora, array &$itheora_config, $width = null, $height = null) {
+function createVideoJS(itheora &$itheora, array &$itheora_config, $width = null, $height = null, $skin = null) {
     if($width === null || $height === null)
 	$posterSize = $itheora->getPosterSize();
     if($width === null)
@@ -86,7 +102,7 @@ function createVideoJS(itheora &$itheora, array &$itheora_config, $width = null,
 
 ?>
       <!-- Begin VideoJS -->
-      <div class="video-js-box">
+      <div class="video-js-box<?php if($skin) echo ' ' . $skin . '-css'; ?>">
 	<!-- Using the Video for Everybody Embed Code http://camendesign.com/code/video_for_everybody -->
 	<video id="<?php echo $itheora->getVideoName(); ?>" class="video-js" width="<?php echo $width; ?>" height="<?php echo $height; ?>" controls="controls" preload="auto" poster="<?php echo $itheora->getPoster(); ?>">
 	  <?php if(($itheora_config['MP4_source'] || $itheora_config['flash_fallback']) && $video = $itheora->getMP4Video()): ?>

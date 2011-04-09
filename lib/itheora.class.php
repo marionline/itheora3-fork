@@ -1,6 +1,5 @@
 <?php
 //require_once('lib/ogg.class.php');
-require_once(dirname(__FILE__) . '/../lib/functions.php');
 require_once(dirname(__FILE__) . '/../lib/Zend/Cache.php');
 /**
  * itheora 
@@ -30,7 +29,9 @@ class itheora {
      * __construct 
      * 
      * @param float $cache_lifetime Pass cache lifetime in seconds default 60
-     * @param mixed $cache_dir Provide another cache directory
+     * @param string $cache_dir Provide another cache directory
+     * @param AmazonS3 $s3 Provide AmazonS3 object
+     * @param array $s3_config Provide itheora_config to retrive s3 bucket_name 
      * @access protected
      * @return void
      */
@@ -44,11 +45,14 @@ class itheora {
 	foreach($this->_supported_video as $extension){
 	    $this->_mimetype_video[] = 'video/' . $extension;
 	}
+
 	// Local video store directory
 	$this->_videoStoreDir = dirname(__FILE__) . '/../video';
 
 	// The name of the server host
-	$this->_baseUrl = getBaseUrl();
+	$this->_baseUrl = strtolower(substr($_SERVER['SERVER_PROTOCOL'], 0, 5)) == 'https://' ? 'https://' : 'http://' 
+	    . $_SERVER['HTTP_HOST']
+	    . pathinfo($_SERVER['PHP_SELF'], PATHINFO_DIRNAME);
 
 	// Start cache
 	$frontendOptions = array(
@@ -63,26 +67,28 @@ class itheora {
 	    $backendOptions = array('cache_dir' => $cache_dir);
 	}
 
-	if($s3 !== null){
-	    $this->_s3 = $s3;
-	}
-	$this->_s3_config = $s3_config;
-
 	$this->_cache = Zend_Cache::factory('Core',
 	    'File',
 	    $frontendOptions,
 	    $backendOptions);
 
+	// Set AmazonS3 object and config
+	if($s3 !== null){
+	    $this->_s3 = $s3;
+	}
+	$this->_s3_config = $s3_config;
+
 	// Get file, default is example
-	$this->getFiles();
+	//$this->getFiles();
     }
 
     /**
      * completeUrl 
+     * Return the complete Url to a file
      * 
      * @param string $file 
      * @access protected
-     * @return string
+     * @return string 
      */
     protected function completeUrl($file) {
 	if($this->_externalVideo){
@@ -97,7 +103,7 @@ class itheora {
      * Check if $this->_files store some files or not
      * 
      * @access protected
-     * @return void | true if a file is founded
+     * @return false | true if a file is founded
      */
     protected function check_founded_files() {
         if (count($this->_files) == 0)
@@ -138,7 +144,9 @@ class itheora {
     }
 
     /**
-     * getExternalFiles 
+     * getExternalFiles
+     * Retrive the files stored remotely via http, return true on
+     * success 
      * 
      * @access protected
      * @return bool
@@ -175,7 +183,8 @@ class itheora {
     }
 
     /**
-     * video 
+     * video
+     * Return the path of a video 
      * 
      * @access protected
      * @return string
@@ -186,6 +195,7 @@ class itheora {
 
     /**
      * getLocalFiles 
+     * Retrive the files stored locally, return true on success 
      * 
      * @access protected
      * @return bool False if no file are found
@@ -216,6 +226,8 @@ class itheora {
 
     /**
      * getFilesFromCloud 
+     * Retrive the files stored in the cloud Amazon S3, return true on
+     * success 
      * 
      * @access protected
      * @return bool False if no file are found
@@ -252,11 +264,12 @@ class itheora {
 
     /**
      * getFiles 
+     * Retrive the files
      * 
-     * @access protected
+     * @access public
      * @return bool
      */
-    protected function getFiles() {
+    public function getFiles() {
 	// Get the files, video and picture to use
 	if($this->_externalVideo){
 	    // Videos are store remotely
@@ -396,6 +409,8 @@ class itheora {
 
     /**
      * getPoster 
+     * Return the URL to the picture to use like a postern in the video
+     * player
      * 
      * @param array $filetypes default value ('png', 'jpg', 'gif')  
      * @access public
@@ -436,11 +451,12 @@ class itheora {
 
     /**
      * getPosterSize 
-     * return the getimagesize array, need GD Library
+     * return the getimagesize array, need GD Library, of the picture use
+     * like poster
      * 
      * @param array $filetypes default value ('png', 'jpg', 'gif')  
      * @access public
-     * @return array
+     * @return array | false if no pictures are found
      */
     public function getPosterSize( $filetypes = null ) {
 	if($filetypes == null){
@@ -483,10 +499,11 @@ class itheora {
 
     /**
      * getVideo 
+     * Return the URL of the video with provided extension
      * 
      * @param string $extension 
      * @access protected
-     * @return string | false
+     * @return string | false if the extension provided is not correct
      */
     protected function getVideo($extension) {
 	if(isset($this->_files[$extension]))
