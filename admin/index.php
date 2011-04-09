@@ -9,6 +9,9 @@ if(!isset($_SESSION['login'])){
     if(isset($_POST['admin_username']) && isset($_POST['admin_pass'])) { 
 	if($_POST['admin_username'] == $itheora_config['admin_username'] && $_POST['admin_pass'] == $itheora_config['admin_pass']){
 	    $_SESSION['login'] = $_POST['admin_username'];
+	} else {
+	    header('Location: login.php');
+	    exit;
 	}
     } else {
 	header('Location: login.php');
@@ -64,15 +67,39 @@ $itheora = new itheora();
 	<h2>List of remote files:</h2>
 	<p>Coming soon...</p>
 	<?php
-	    $s3 = new AmazonS3();
+	    $s3 = new AmazonS3($itheora_config['aws_key'], $itheora_config['aws_secret_key']);
 	    $s3->set_region($itheora_config['s3_region']);
-	    $s3->set_vhost('media.marionline.it');
-	    var_dump($s3->get_object_list($itheora_config['bucket_name']));
-	    var_dump($s3->get_object_url($itheora_config['bucket_name'], 'example.ogv'));
+	    $s3->set_vhost($itheora_config['s3_vhost']);
+	    $object_list = $s3->get_object_list($itheora_config['bucket_name']);
+	    $list = '<ul>' . PHP_EOL;
+	    $previus_object = '';
+	    foreach($object_list as $object) {
+
+		if( dirname($object) != dirname($previus_object) && dirname($object) != substr($previus_object, 0, -1) && $previus_object != '' )
+		    $list .= PHP_EOL . '</ul></li>' . PHP_EOL;
+		elseif( dirname($object) == '.' && $previus_object != '' )
+		    $list .= '</li>' . PHP_EOL;
+
+		if( dirname($previus_object) == '.' && dirname($object) != '.' ) {
+		    $list .= PHP_EOL . '<ul>' . PHP_EOL;
+		}
+
+		$list .= '<li><a href="delete.php?file=' . $object . '&amp;s3=true">Delete</a> ' . $object;
+
+		if( dirname($object) != '.' )
+		    $list .= '</li>';
+
+		$previus_object = $object;
+	    }
+	    if( dirname($previus_object) != '.' )
+		$list .= '</ul></li>';
+	    $list .= '</ul>' . PHP_EOL;
+	    echo $list;
 	?>
+	<p><a href="addfile.php?s3=true">Add File Remotly on the cloud (AmazonS3)</a></p>
 	<?php
 	    $time = microtime(true) - $start_time;
-	    echo '<p>' . $time . '</p>';
+	    echo '<p>Execution time: ' . $time . '</p>';
 	    ?>
     </body>
 </html>
