@@ -13,12 +13,13 @@ require_once(dirname(__FILE__) . '/../lib/aws-sdk/sdk.class.php');
  * @param 'width' => null
  * @param 'height' => null 
  * @param 'useFilesInCloud' => false
+ * @param 'skin' => null          Skin to be use (default video-js), other hu, vim, tube
+ * @param 'alternativeName' => null Alternative name and id to use in object tag
  * @param array $itheora_config If you want to use files store in cloud need to pass the configuration
- * @param string $skin          Skin to be use (default video-js), other hu, vim, tube
  * @access public
  * @return html code
  */
-function createObjectTag(array $options = array('video' => 'example', 'width' => null, 'height' => null, 'useFilesInCloud' => false), array $itheora_config = array(), $skin = null) {
+function createObjectTag(array $options = array('video' => 'example', 'width' => null, 'height' => null, 'useFilesInCloud' => false, 'skin' => null, 'alternativeName' => null), array $itheora_config = array()) {
     if(!isset($options['video']))
 	$options['video'] = 'example';
 
@@ -68,10 +69,20 @@ function createObjectTag(array $options = array('video' => 'example', 'width' =>
 	$key = 'v';
     }
 
-    if($skin !== null)
-	$skin = '&amp;skin=' . $skin;
+    if(isset($options['skin']) && $options['skin'] !== null)
+	$skin = '&amp;skin=' . $options['skin'];
+    else
+	$skin = '';
 
-    return '<object id="' . $options['video'] . '" name="' . $options['video'] . '" class="itheora3-fork" type="application/xhtml+xml" data="itheora.php?' . $key . '=' . $options['video'] . $width_url . $height_url . $skin . '" style="' . $width_style . ' ' . $height_style . '"> 
+    if(isset($options['alternativeName']) && $options['alternativeName'] !== null){
+	$id = $options['alternativeName'];
+	$name = $options['alternativeName'];
+    } else {
+	$id = $options['video'];
+	$name = $options['video'];
+    }
+
+    return '<object id="' . $id . '" name="' . $name . '" class="itheora3-fork" type="application/xhtml+xml" data="itheora.php?' . $key . '=' . $options['video'] . $width_url . $height_url . $skin . '" style="' . $width_style . ' ' . $height_style . '"> 
 	</object>';
 }
 

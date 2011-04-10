@@ -1,5 +1,6 @@
 <?php
 //require_once('lib/ogg.class.php');
+set_include_path(get_include_path() . PATH_SEPARATOR . dirname(__FILE__) . '/../lib');
 require_once(dirname(__FILE__) . '/../lib/Zend/Cache.php');
 /**
  * itheora 
@@ -301,6 +302,12 @@ class itheora {
             throw new Exception('The url to check must be a not empty string');
         }
        
+	$pattern='|^http(s)?://[a-z0-9-]+(.[a-z0-9-]+)*(:[0-9]+)?(/.*)?$|i';
+	if(preg_match($pattern, $url) > 0) 
+	    return true;
+	else 
+	    return false;
+
         $handle   = curl_init($url);
 
         if (false === $handle)

@@ -17,14 +17,16 @@ include_once('config/config.inc.php');
         <title>ITheora, I really broadcast myself - New Itheora fork test</title>
     </head>
     <body>
+	<h1>Itheora3-fork working example</h1>
+	<h3>Source code: <a href="https://github.com/marionline/itheora3-fork">here on github</a></h3>
 	<p>
 	    Here I'm using createObjectTag() helper function to output the html code.
 	    <br />
-	    I don't pass any particular parameters (just I tell to my helper function to use files stored in the cloud and I pass the configuration options) so the output use default video with the width and heigth take from poster image:
+	    I don't pass any particular parameters (just I tell to my helper function to use files stored in the cloud and I pass the configuration options, then I set an alternativeName to use the same video file in my page without problems) so the output use default video with the width and heigth take from poster image:
 	    <br />
-	    <code><?php highlight_string('<?php echo createObjectTag(array(\'useFilesInCloud\' => true), $itheora_config); ?>'); ?></code>
+	    <code><?php highlight_string('<?php echo createObjectTag(array(\'useFilesInCloud\' => true, \'alternativeName\' => \'example1\'), $itheora_config); ?>'); ?></code>
 	    <br />
-	    <?php echo createObjectTag(array('useFilesInCloud' => true), $itheora_config); ?>
+	    <?php echo createObjectTag(array('useFilesInCloud' => true, 'alternativeName' => 'example1'), $itheora_config); ?>
 	</p>
 	<p>
 	    I can use directly html code and set width and height as I want:
@@ -38,13 +40,13 @@ include_once('config/config.inc.php');
 	    </object>
 	</p>
 	<p>
-	    Or use createObjectTag() function helper and set my preferer width and heigth and another skin:
+	    Or use createObjectTag() function helper and set my preferer width and heigth and another skin (for now I can choose from vim, hu and tube):
 	    <br />
 	    <code>
-		<?php highlight_string('<?php echo createObjectTag(array(\'video\' => \'example\', \'width\' => 400, \'height\' => 400, \'useFilesInCloud\' => true), $itheora_config, \'vim\'); ?>'); ?>
+		<?php highlight_string('<?php echo createObjectTag(array(\'video\' => \'example\', \'width\' => 400, \'height\' => 400, \'useFilesInCloud\' => true, \'skin\' => \'vim\', \'alternativeName\' => \'example2\'), $itheora_config); ?>'); ?>
 	    </code>
 	    <br />
-	    <?php echo createObjectTag(array('video' => 'example', 'width' => 400, 'height' => 400, 'useFilesInCloud' => true), $itheora_config, 'vim'); ?>
+	    <?php echo createObjectTag(array('video' => 'example', 'width' => 400, 'height' => 400, 'useFilesInCloud' => true, 'skin' => 'vim', 'alternativeName' => 'example2'), $itheora_config, 'vim'); ?>
 	</p>
 	<p>
 	    Or just use createObjectTag() function with just video name, the function retrive alone the width and height to use.
@@ -56,7 +58,7 @@ include_once('config/config.inc.php');
 	    <?php echo createObjectTag(array('video' => 'oceans-clip', 'useFilesInCloud' => true), $itheora_config); ?>
 	</p>
 	<p>
-	    If no file are found we have the error video:
+	    If no files are found we have the error video:
 	    <br />
 	    <code>
 		<?php highlight_string('<?php echo createObjectTag(array(\'video\' => \'ocean-clip-not-exist\', \'useFilesInCloud\' => true), $itheora_config); ?>'); ?>
