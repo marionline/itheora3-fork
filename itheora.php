@@ -7,7 +7,8 @@ require_once('lib/aws-sdk/sdk.class.php');
 
 // Get parameters from $_GET array
 if(isset($_GET['v']) && $_GET['v'] != ''){
-    $video = $_GET['v'];
+    // Use pathinfo to get old version compatibility
+    $video = pathinfo($_GET['v'], PATHINFO_FILENAME);
 }
 
 if(isset($_GET['r'])){
@@ -21,6 +22,8 @@ if(isset($_GET['r'])){
     $itheora = new itheora(60, null, $s3, $itheora_config);
 } else {
     $itheora = new itheora();
+    $itheora->setVideoDir($itheora_config['video_dir']);
+    $itheora->setVideoUrl($itheora_config['video_url']);
 }
 if(isset($video))
     $itheora->setVideoName($video);

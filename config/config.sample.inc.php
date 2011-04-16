@@ -26,3 +26,5 @@ $itheora_config['s3_region']      = 'AmazonS3::REGION_EU_W1';
 $itheora_config['s3_vhost']       = 'media.marionline.it';
 $itheora_config['aws_key']        = 'Amazon web service key';
 $itheora_config['aws_secret_key'] = 'Amazon web service secret key';
+//$itheora_config['video_dir']      = '';
+//$itheora_config['video_url']      = '';
